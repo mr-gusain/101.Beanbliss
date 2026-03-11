@@ -36,8 +36,8 @@ if (!fs.existsSync(uploadDir)) {
 const allowedOrigins = [
 	"http://localhost:3000",
 	"http://localhost:5173",
-	"https://1nonlystore-online-e-commerce-app.vercel.app",
-	"https://1nonlystore-online-e-commerce-app.vercel.app/",
+	"https://bean-bliss-coffee-restro.vercel.app",,
+	"https://bean-bliss-coffee-restro.vercel.app/"
 ];
 
 app.use(
