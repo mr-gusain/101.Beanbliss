@@ -1,0 +1,11 @@
+fastapi[standard]
+motor
+beanie
+pydantic
+pydantic-settings
+PyJWT
+passlib[bcrypt]
+python-multipart
+stripe
+openai
+cloudinary
