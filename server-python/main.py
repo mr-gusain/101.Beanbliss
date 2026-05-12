@@ -20,15 +20,21 @@ async def lifespan(app: FastAPI):
     import models.cart
     import models.contact
 
-    # Create all tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    print("Connected to MySQL and created tables via SQLAlchemy")
+    # Create all tables - wrapped in try/except so Vercel doesn't crash on cold start
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("Connected to MySQL and created tables via SQLAlchemy")
+    except Exception as e:
+        print(f"Warning: Could not connect to database on startup: {e}")
     
     yield
     
     # Shutdown
-    await engine.dispose()
+    try:
+        await engine.dispose()
+    except Exception:
+        pass
 
 app = FastAPI(title="BeanBliss Backend API (MySQL)", lifespan=lifespan)
 
@@ -37,7 +43,11 @@ allowed_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "https://bean-bliss-coffee-restro.vercel.app",
-    "https://bean-bliss-coffee-restro.vercel.app/"
+    "https://bean-bliss-coffee-restro.vercel.app/",
+    "https://beanliss-backend.vercel.app",
+    "https://beanliss-backend.vercel.app/",
+    "https://beanbliss-frontend.vercel.app",
+    "https://beanbliss-frontend.vercel.app/",
 ]
 
 app.add_middleware(
