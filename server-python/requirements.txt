@@ -5,7 +5,7 @@ greenlet
 pydantic
 pydantic-settings
 PyJWT
-passlib[bcrypt]
+bcrypt
 python-multipart
 stripe
 openai
