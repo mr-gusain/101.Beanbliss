@@ -4,7 +4,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     PORT: int = 8000
-    MONGODB_URI: str
+    MYSQL_URL: str
     JWT_SECRET: str
     NODE_ENV: str = "development"
     STRIPE_SECRET_KEY: str

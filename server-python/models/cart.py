@@ -1,17 +1,27 @@
-from typing import List
-from pydantic import BaseModel, Field
-from beanie import Document, PydanticObjectId
+from sqlalchemy import Column, Integer, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from datetime import datetime
+from core.database import Base
 
-class CartItem(BaseModel):
-    product: PydanticObjectId
-    quantity: int = Field(default=1, ge=1)
 
-class Cart(Document):
-    user: PydanticObjectId
-    items: List[CartItem] = []
-    createdAt: datetime = Field(default_factory=datetime.utcnow)
-    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+class Cart(Base):
+    __tablename__ = "carts"
 
-    class Settings:
-        name = "carts"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    createdAt = Column(DateTime, default=datetime.utcnow)
+    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan", lazy="selectin")
+
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cart_id = Column(Integer, ForeignKey("carts.id", ondelete="CASCADE"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, default=1)
+
+    cart = relationship("Cart", back_populates="items")
+    product = relationship("Product", lazy="selectin")

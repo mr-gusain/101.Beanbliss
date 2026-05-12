@@ -4,15 +4,8 @@ import traceback
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from motor.motor_asyncio import AsyncIOMotorClient
-from beanie import init_beanie
 from core.config import get_settings
-
-from models.user import User
-from models.product import Product
-from models.order import Order
-from models.cart import Cart
-from models.contact import Contact
+from core.database import engine, Base
 
 from routes import auth, users, products, cart, orders, payment, ai, contact
 
@@ -20,28 +13,24 @@ settings = get_settings()
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    app.mongodb_client = AsyncIOMotorClient(settings.MONGODB_URI)
-    app.mongodb = app.mongodb_client.get_default_database()
-    
-    await init_beanie(
-        database=app.mongodb,
-        document_models=[
-            User,
-            Product,
-            Order,
-            Cart,
-            Contact
-        ]
-    )
-    print("Connected to MongoDB via Motor and initialized Beanie")
+    # Import all models so Base.metadata knows about them
+    import models.user
+    import models.product
+    import models.order
+    import models.cart
+    import models.contact
+
+    # Create all tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    print("Connected to MySQL and created tables via SQLAlchemy")
     
     yield
     
     # Shutdown
-    app.mongodb_client.close()
+    await engine.dispose()
 
-app = FastAPI(title="MERN to Python Backend API", lifespan=lifespan)
+app = FastAPI(title="BeanBliss Backend API (MySQL)", lifespan=lifespan)
 
 # CORS Configuration
 allowed_origins = [
@@ -69,11 +58,9 @@ app.include_router(ai.router)
 app.include_router(contact.router)
 
 # Catch-all exception handler so CORS headers are always present
-# (Without this, unhandled 500 errors skip CORSMiddleware headers,
-#  causing the browser to report a misleading CORS error.)
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    traceback.print_exc()  # Log the real error to the terminal
+    traceback.print_exc()
     origin = request.headers.get("origin")
     headers = {}
     if origin in allowed_origins:

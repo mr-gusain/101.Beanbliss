@@ -23,7 +23,6 @@ import AdminProducts from './pages/admin/AdminProducts';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminUsers from './pages/admin/AdminUsers';
 import BackToTop from './components/layout/BackToTop';
-import AIAssistant from './components/layout/AIAssistant';
 import { gsap } from 'gsap';
 
 import { Elements } from '@stripe/react-stripe-js';
@@ -60,21 +59,21 @@ function App() {
       <Header />
       <main className="flex-grow">
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/faqs" element={<FAQsPage />} />
-          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/" element={ <HomePage /> } />
+          <Route path="/products" element={ <ProductsPage /> } />
+          <Route path="/products/:id" element={ <ProductDetailPage /> } />
+          <Route path="/cart" element={ <CartPage /> } />
+          <Route path="/login" element={ <Login /> } />
+          <Route path="/signup" element={ <Signup /> } />
+          <Route path="/faqs" element={ <FAQsPage /> } />
+          <Route path="/contact" element={ <ContactPage /> } />
 
-          {/* Protected routes */}
+          {/* Protected routes */ }
           <Route
             path="/checkout"
             element={
               <ProtectedRoute>
-                <Elements stripe={stripePromise}>
+                <Elements stripe={ stripePromise }>
                   <CheckoutPage />
                 </Elements>
               </ProtectedRoute>
@@ -105,7 +104,7 @@ function App() {
             }
           />
 
-          {/* Admin Routes */}
+          {/* Admin Routes */ }
           <Route
             path="/admin"
             element={
@@ -114,17 +113,16 @@ function App() {
               </AdminRoute>
             }
           >
-            <Route index element={<AdminDashboard />} />
-            <Route path="products" element={<AdminProducts />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="users" element={<AdminUsers />} />
+            <Route index element={ <AdminDashboard /> } />
+            <Route path="products" element={ <AdminProducts /> } />
+            <Route path="orders" element={ <AdminOrders /> } />
+            <Route path="users" element={ <AdminUsers /> } />
           </Route>
 
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="*" element={ <NotFoundPage /> } />
         </Routes>
       </main>
       <BackToTop />
-      <AIAssistant />
       <Footer />
       <Toaster position="top-right" />
     </div>

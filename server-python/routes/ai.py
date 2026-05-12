@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from typing import List, Dict, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from models.product import Product
 from models.user import User
-from core.security import oauth2_scheme, verify_password, get_current_user
+from core.security import oauth2_scheme
 from core.config import get_settings
+from core.database import get_db
 from openai import AsyncOpenAI
 import re
+import jwt as pyjwt
 
 router = APIRouter(prefix="/api/ai", tags=["AI"])
 settings = get_settings()
@@ -17,11 +21,11 @@ if settings.OPENAI_API_KEY and len(settings.OPENAI_API_KEY) > 10 and "your_opena
     except Exception as e:
         print("Failed to init OpenAI:", e)
 
-def generate_offline_response(user_message: str, products: List[Product], user_context: str) -> str:
+def generate_offline_response(user_message: str, products: list, user_context: str) -> str:
     msg = user_message.lower().strip()
     
     if re.search(r"^(hi|hello|hey|howdy|greetings|yo|sup)", msg):
-        return "👋 Hello! Welcome to 1NonlyStore! I can help you find the perfect tech product. Ask me about our Hot Drinks, Cold Drinks, Pastries, Light Bites, or Desserts! wait actually, our catalog mostly consists of Cafe products."
+        return "👋 Hello! Welcome to BeanBliss! I can help you find the perfect product. Ask me about our Hot Drinks, Cold Drinks, Pastries, Light Bites, or Desserts!"
 
     if "shipping" in msg or "delivery" in msg or "ship" in msg:
         return "🚚 We offer free standard shipping on orders over $50! Standard delivery takes 3-5 business days."
@@ -33,7 +37,7 @@ def generate_offline_response(user_message: str, products: List[Product], user_c
         return "💳 We accept Credit/Debit cards via Stripe and Cash on Delivery (COD). All transactions are 100% secure!"
 
     if "contact" in msg or "support" in msg or "email" in msg or "call" in msg:
-        return "📧 You can reach our support team at support@1nonlystore.com."
+        return "📧 You can reach our support team at support@beanbliss.com."
 
     if "account" in msg or "profile" in msg or "password" in msg or "login" in msg or "sign" in msg:
         if "guest" in user_context:
@@ -62,13 +66,15 @@ def generate_offline_response(user_message: str, products: List[Product], user_c
 @router.post("/chat")
 async def chat_with_ai(
     messages: List[Dict[str, str]] = Body(..., embed=True),
-    token: Optional[str] = Depends(oauth2_scheme)
+    token: Optional[str] = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db)
 ):
     if not messages:
         raise HTTPException(status_code=400, detail="Messages array is required")
 
     try:
-        products = await Product.find_all().limit(20).to_list()
+        result = await db.execute(select(Product).limit(20))
+        products = result.scalars().all()
     except Exception as e:
         products = []
         print(e)
@@ -78,12 +84,10 @@ async def chat_with_ai(
 
     if token:
         try:
-            # Simple check since it's an optional dependency and might not be valid 
-            from jose import jwt
-            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+            payload = pyjwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
             user_id = payload.get("sub")
-            from beanie import PydanticObjectId
-            user = await User.get(PydanticObjectId(user_id))
+            user_result = await db.execute(select(User).where(User.id == int(user_id)))
+            user = user_result.scalars().first()
             if user:
                 user_context = f"User: {user.firstName} {user.lastName} ({user.email})."
         except Exception:
@@ -97,7 +101,7 @@ async def chat_with_ai(
             ])
             system_msg = {
                 "role": "system",
-                "content": f"""You are the 1NonlyStore AI Assistant, a helpful and knowledgeable shopping assistant for a cafe and electronics store.
+                "content": f"""You are the BeanBliss AI Assistant, a helpful and knowledgeable shopping assistant for a cafe store.
 
 Your capabilities:
 1. Recommend products based on user needs.

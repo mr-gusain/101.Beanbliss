@@ -1,3 +1,4 @@
 @echo off
 call venv\Scripts\activate.bat
-uvicorn main:app --reload
+python create_db.py
+python -m uvicorn main:app --reload

@@ -1,3 +1,4 @@
 #!/bin/bash
 source venv/Scripts/activate
-uvicorn main:app --reload
+python create_db.py
+python -m uvicorn main:app --reload

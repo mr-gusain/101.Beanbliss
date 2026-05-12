@@ -1,49 +1,113 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from models.user import User
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from models.user import User, UserNotification
 from models.cart import Cart
-from models.order import Order, OrderItem, ShippingInfo
+from models.order import Order, OrderItem
 from models.product import Product
 from core.security import get_current_user, get_admin_user
-from beanie import PydanticObjectId
-from typing import List, Dict, Any
+from core.database import get_db
+from typing import Optional, Dict, Any
 
 router = APIRouter(prefix="/api/orders", tags=["Orders"])
 
-async def get_populated_order(order: Order) -> Dict[str, Any]:
-    ret = order.model_dump()
-    ret["_id"] = str(order.id)
-    ret["user"] = str(order.user)
-    
-    user = await User.get(order.user)
-    if user:
-        ret["user"] = {"_id": str(user.id), "firstName": user.firstName, "lastName": user.lastName, "email": user.email}
-    
+class ShippingInfoIn(BaseModel):
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zipCode: Optional[str] = None
+    country: Optional[str] = None
+
+def _serialize_product(p: Product) -> dict:
+    return {
+        "_id": str(p.id),
+        "name": p.name,
+        "description": p.description,
+        "price": p.price,
+        "discountPrice": p.discountPrice,
+        "category": p.category,
+        "image": p.image,
+        "images": p.images or [],
+        "rating": p.rating,
+        "stock": p.stock,
+        "featured": p.featured,
+        "specs": p.specs,
+        "colors": p.colors or [],
+        "createdAt": p.createdAt.isoformat() if p.createdAt else None,
+        "updatedAt": p.updatedAt.isoformat() if p.updatedAt else None,
+    }
+
+def _serialize_order(order: Order) -> dict:
+    # Build user info
+    user_data = str(order.user_id)
+    if order.user:
+        user_data = {
+            "_id": str(order.user.id),
+            "firstName": order.user.firstName,
+            "lastName": order.user.lastName,
+            "email": order.user.email,
+        }
+
+    # Build items with populated product
     populated_items = []
     for item in order.items:
-        p = await Product.get(item.product)
-        item_dict = item.model_dump()
-        if p:
-            p_dict = p.model_dump()
-            p_dict["_id"] = str(p.id)
-            item_dict["product"] = p_dict
+        item_dict = {
+            "product": str(item.product_id),
+            "quantity": item.quantity,
+            "price": item.price,
+        }
+        if item.product:
+            item_dict["product"] = _serialize_product(item.product)
         populated_items.append(item_dict)
-    
-    ret["items"] = populated_items
-    return ret
+
+    return {
+        "_id": str(order.id),
+        "user": user_data,
+        "items": populated_items,
+        "shippingInfo": {
+            "firstName": order.ship_firstName,
+            "lastName": order.ship_lastName,
+            "email": order.ship_email,
+            "phone": order.ship_phone,
+            "address": order.ship_address,
+            "city": order.ship_city,
+            "state": order.ship_state,
+            "zipCode": order.ship_zipCode,
+            "country": order.ship_country,
+        },
+        "shippingMethod": order.shippingMethod,
+        "shippingCost": order.shippingCost,
+        "taxAmount": order.taxAmount,
+        "subtotal": order.subtotal,
+        "total": order.total,
+        "status": order.status,
+        "paymentMethod": order.paymentMethod,
+        "paymentStatus": order.paymentStatus,
+        "createdAt": order.createdAt.isoformat() if order.createdAt else None,
+        "updatedAt": order.updatedAt.isoformat() if order.updatedAt else None,
+    }
 
 @router.get("/admin/all")
-async def get_all_orders(admin: User = Depends(get_admin_user)):
-    orders = await Order.find_all().sort("-createdAt").to_list()
-    return [await get_populated_order(o) for o in orders]
+async def get_all_orders(admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Order).order_by(Order.createdAt.desc()))
+    orders = result.scalars().all()
+    return [_serialize_order(o) for o in orders]
 
 @router.post("")
 async def create_order(
-    shippingInfo: ShippingInfo = Body(...),
+    shippingInfo: ShippingInfoIn = Body(...),
     shippingMethod: str = Body(...),
     paymentMethod: str = Body(...),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
-    cart = await Cart.find_one(Cart.user == user.id)
+    result = await db.execute(select(Cart).where(Cart.user_id == user.id))
+    cart = result.scalars().first()
     if not cart or not cart.items:
         raise HTTPException(status_code=400, detail="Cart is empty")
 
@@ -51,7 +115,8 @@ async def create_order(
     subtotal = 0.0
 
     for item in cart.items:
-        product = await Product.get(item.product)
+        prod_result = await db.execute(select(Product).where(Product.id == item.product_id))
+        product = prod_result.scalars().first()
         if product and product.stock >= item.quantity:
             valid_items.append({
                 "product": product,
@@ -68,12 +133,7 @@ async def create_order(
     if not valid_items:
         raise HTTPException(status_code=400, detail="Cart contains no valid products.")
 
-    shipping_costs = {
-        "standard": 10,
-        "priority": 20,
-        "express": 35
-    }
-
+    shipping_costs = {"standard": 10, "priority": 20, "express": 35}
     shipping_cost = shipping_costs.get(shippingMethod, 10.0)
     tax_amount = subtotal * 0.085
     total = subtotal + shipping_cost + tax_amount
@@ -82,47 +142,63 @@ async def create_order(
     if paymentMethod == "Card":
         payment_status = "Paid"
 
-    order_items = [
-        OrderItem(product=vi["product"].id, quantity=vi["quantity"], price=vi["price"])
-        for vi in valid_items
-    ]
-
+    ship = shippingInfo.model_dump()
     order = Order(
-        user=user.id,
-        items=order_items,
-        shippingInfo=shippingInfo,
+        user_id=user.id,
         shippingMethod=shippingMethod,
         shippingCost=shipping_cost,
         taxAmount=tax_amount,
         subtotal=subtotal,
         total=total,
         paymentMethod=paymentMethod,
-        paymentStatus=payment_status
+        paymentStatus=payment_status,
+        ship_firstName=ship.get("firstName"),
+        ship_lastName=ship.get("lastName"),
+        ship_email=ship.get("email"),
+        ship_phone=ship.get("phone"),
+        ship_address=ship.get("address"),
+        ship_city=ship.get("city"),
+        ship_state=ship.get("state"),
+        ship_zipCode=ship.get("zipCode"),
+        ship_country=ship.get("country"),
     )
+    db.add(order)
+    await db.flush()  # get order.id before adding items
 
     for vi in valid_items:
-        pr = vi["product"]
-        pr.stock -= vi["quantity"]
-        await pr.save()
+        oi = OrderItem(
+            order_id=order.id,
+            product_id=vi["product"].id,
+            quantity=vi["quantity"],
+            price=vi["price"]
+        )
+        db.add(oi)
+        vi["product"].stock -= vi["quantity"]
 
-    cart.items = []
-    await cart.save()
+    # Clear cart
+    for item in cart.items:
+        await db.delete(item)
 
-    await order.insert()
-    return await get_populated_order(order)
+    await db.commit()
+    await db.refresh(order)
+    return _serialize_order(order)
 
 @router.get("")
-async def get_my_orders(user: User = Depends(get_current_user)):
-    orders = await Order.find(Order.user == user.id).sort("-createdAt").to_list()
-    return [await get_populated_order(o) for o in orders]
+async def get_my_orders(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Order).where(Order.user_id == user.id).order_by(Order.createdAt.desc())
+    )
+    orders = result.scalars().all()
+    return [_serialize_order(o) for o in orders]
 
 @router.get("/{id}")
-async def get_order_by_id(id: PydanticObjectId, user: User = Depends(get_current_user)):
-    order = await Order.get(id)
+async def get_order_by_id(id: int, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Order).where(Order.id == id))
+    order = result.scalars().first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    if str(order.user) != str(user.id) and user.role != "admin":
+    if order.user_id != user.id and user.role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    return await get_populated_order(order)
+    return _serialize_order(order)

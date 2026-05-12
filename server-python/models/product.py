@@ -1,23 +1,23 @@
-from typing import List, Optional, Dict
-from pydantic import Field
-from beanie import Document
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text, JSON
 from datetime import datetime
+from core.database import Base
 
-class Product(Document):
-    name: str
-    description: str
-    price: float
-    discountPrice: Optional[float] = None
-    category: str
-    image: str
-    images: List[str] = []
-    rating: float = Field(default=0, ge=0, le=5)
-    stock: int = Field(default=0, ge=0)
-    featured: bool = False
-    specs: Optional[Dict[str, str]] = None
-    colors: List[str] = []
-    createdAt: datetime = Field(default_factory=datetime.utcnow)
-    updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
-    class Settings:
-        name = "products"
+class Product(Base):
+    __tablename__ = "products"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    price = Column(Float, nullable=False)
+    discountPrice = Column(Float, nullable=True)
+    category = Column(String(100), nullable=False, index=True)
+    image = Column(String(500), default="")
+    images = Column(JSON, default=list)       # stored as JSON array
+    rating = Column(Float, default=0)
+    stock = Column(Integer, default=0)
+    featured = Column(Boolean, default=False)
+    specs = Column(JSON, nullable=True)        # stored as JSON object
+    colors = Column(JSON, default=list)        # stored as JSON array
+    createdAt = Column(DateTime, default=datetime.utcnow)
+    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

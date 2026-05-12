@@ -1,6 +1,7 @@
 fastapi[standard]
-motor
-beanie
+sqlalchemy[asyncio]
+aiomysql
+greenlet
 pydantic
 pydantic-settings
 PyJWT

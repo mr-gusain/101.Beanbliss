@@ -1,40 +1,49 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field
-from beanie import Document, PydanticObjectId, Link
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text
+from sqlalchemy.orm import relationship
 from datetime import datetime
-from .user import User
-from .product import Product
+from core.database import Base
 
-class OrderItem(BaseModel):
-    product: PydanticObjectId
-    quantity: int = Field(ge=1)
-    price: float
 
-class ShippingInfo(BaseModel):
-    firstName: Optional[str] = None
-    lastName: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    address: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    zipCode: Optional[str] = None
-    country: Optional[str] = None
+class Order(Base):
+    __tablename__ = "orders"
 
-class Order(Document):
-    user: PydanticObjectId
-    items: List[OrderItem]
-    shippingInfo: ShippingInfo
-    shippingMethod: str = 'standard' # 'standard', 'priority', 'express'
-    shippingCost: float = 0.0
-    taxAmount: float = 0.0
-    subtotal: float
-    total: float
-    status: str = 'Pending' # 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'
-    paymentMethod: str = 'Card' # 'Card', 'COD'
-    paymentStatus: str = 'Pending' # 'Pending', 'Paid', 'Failed'
-    createdAt: datetime = Field(default_factory=datetime.utcnow)
-    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    shippingMethod = Column(String(50), default="standard")
+    shippingCost = Column(Float, default=0.0)
+    taxAmount = Column(Float, default=0.0)
+    subtotal = Column(Float, nullable=False)
+    total = Column(Float, nullable=False)
+    status = Column(String(50), default="Pending")
+    paymentMethod = Column(String(50), default="Card")
+    paymentStatus = Column(String(50), default="Pending")
 
-    class Settings:
-        name = "orders"
+    # Shipping info flattened into the orders table
+    ship_firstName = Column(String(100), nullable=True)
+    ship_lastName = Column(String(100), nullable=True)
+    ship_email = Column(String(255), nullable=True)
+    ship_phone = Column(String(50), nullable=True)
+    ship_address = Column(String(500), nullable=True)
+    ship_city = Column(String(100), nullable=True)
+    ship_state = Column(String(100), nullable=True)
+    ship_zipCode = Column(String(20), nullable=True)
+    ship_country = Column(String(100), nullable=True)
+
+    createdAt = Column(DateTime, default=datetime.utcnow)
+    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan", lazy="selectin")
+    user = relationship("User", lazy="selectin")
+
+
+class OrderItem(Base):
+    __tablename__ = "order_items"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False)
+
+    order = relationship("Order", back_populates="items")
+    product = relationship("Product", lazy="selectin")

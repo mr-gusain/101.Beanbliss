@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from models.user import User
 from core.security import get_password_hash, verify_password, create_access_token, get_current_user
-from datetime import timedelta
-from beanie import PydanticObjectId
+from core.database import get_db
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
@@ -19,8 +20,9 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.post("/register")
-async def register_user(form_data: RegisterRequest):
-    user_exists = await User.find_one(User.email == form_data.email)
+async def register_user(form_data: RegisterRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == form_data.email))
+    user_exists = result.scalars().first()
     if user_exists:
         raise HTTPException(status_code=400, detail="User already exists")
     
@@ -32,7 +34,9 @@ async def register_user(form_data: RegisterRequest):
         password=hashed_pw,
         phone=form_data.phone
     )
-    await new_user.insert()
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
     
     token = create_access_token(subject=str(new_user.id))
     
@@ -47,8 +51,9 @@ async def register_user(form_data: RegisterRequest):
     }
 
 @router.post("/login")
-async def login_user(form_data: LoginRequest):
-    user = await User.find_one(User.email == form_data.email)
+async def login_user(form_data: LoginRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == form_data.email))
+    user = result.scalars().first()
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
@@ -66,7 +71,28 @@ async def login_user(form_data: LoginRequest):
 
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):
-    user_dict = current_user.model_dump()
-    user_dict["_id"] = str(current_user.id)
-    del user_dict["password"]
-    return user_dict
+    return {
+        "_id": str(current_user.id),
+        "firstName": current_user.firstName,
+        "lastName": current_user.lastName,
+        "email": current_user.email,
+        "phone": current_user.phone,
+        "role": current_user.role,
+        "addresses": [
+            {"type": a.type, "street": a.street, "city": a.city, "state": a.state,
+             "zipCode": a.zipCode, "country": a.country, "isDefault": a.isDefault}
+            for a in current_user.addresses
+        ],
+        "paymentMethods": [
+            {"type": p.type, "last4": p.last4, "brand": p.brand,
+             "expiryDate": p.expiryDate, "isDefault": p.isDefault}
+            for p in current_user.paymentMethods
+        ],
+        "notifications": [
+            {"type": n.type, "title": n.title, "message": n.message,
+             "read": n.read, "createdAt": n.createdAt.isoformat() if n.createdAt else None}
+            for n in current_user.notifications
+        ],
+        "createdAt": current_user.createdAt.isoformat() if current_user.createdAt else None,
+        "updatedAt": current_user.updatedAt.isoformat() if current_user.updatedAt else None,
+    }
