@@ -94,7 +94,9 @@ const AdminProducts = () => {
             data.append('stock', formData.stock);
             data.append('featured', formData.featured);
             data.append('rating', formData.rating);
-            data.append('image', formData.image);
+            if (formData.image instanceof File) {
+                data.append('image', formData.image);
+            }
 
             if (currentProduct) {
                 await productsAPI.update(currentProduct._id, data);
