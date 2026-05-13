@@ -100,7 +100,7 @@ const AdminOrders = () => {
                                         {order.items.length} items
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-secondary-900 dark:text-secondary-100">
-                                        ${order.total.toFixed(2)}
+                                        ₹{order.total.toFixed(2)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${getStatusColor(order.paymentStatus)}`}>
@@ -141,7 +141,7 @@ const AdminOrders = () => {
                                 </p>
                                 <p className="text-xs text-secondary-400 dark:text-secondary-500">{order.items.length} items</p>
                             </div>
-                            <p className="text-sm font-bold text-secondary-900 dark:text-secondary-100 shrink-0 ml-4">${order.total.toFixed(2)}</p>
+                            <p className="text-sm font-bold text-secondary-900 dark:text-secondary-100 shrink-0 ml-4">₹{order.total.toFixed(2)}</p>
                         </div>
                     </div>
                 ))}

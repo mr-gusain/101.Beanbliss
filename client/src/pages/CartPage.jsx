@@ -143,7 +143,7 @@ const CartPage = () => {
 
                           <div className="flex items-center gap-4">
                             <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
-                              ${((product.discountPrice || product.price) * item.quantity).toFixed(2)}
+                              ₹{((product.discountPrice || product.price) * item.quantity).toFixed(2)}
                             </span>
                             <button
                               onClick={() => handleRemoveItem(itemId)}
@@ -169,7 +169,7 @@ const CartPage = () => {
                 <div className="space-y-4 text-sm">
                   <div className="flex justify-between text-secondary-600 dark:text-secondary-400">
                     <span>Subtotal ({totalItems} items)</span>
-                    <span className="font-semibold text-secondary-900 dark:text-secondary-100">${totalPrice.toFixed(2)}</span>
+                    <span className="font-semibold text-secondary-900 dark:text-secondary-100">₹{totalPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-secondary-600 dark:text-secondary-400">
                     <span>Shipping</span>
@@ -177,19 +177,19 @@ const CartPage = () => {
                       {shippingCost === 0 ? (
                         <span className="text-success-600 dark:text-success-400">Free</span>
                       ) : (
-                        `$${shippingCost.toFixed(2)}`
+                        `₹${shippingCost.toFixed(2)}`
                       )}
                     </span>
                   </div>
                   {shippingCost > 0 && (
                     <p className="text-xs text-secondary-400 dark:text-secondary-500 bg-secondary-50 dark:bg-secondary-700/50 p-3 rounded-lg border border-secondary-100 dark:border-secondary-600 flex items-center gap-2">
                       <Truck size={14} className="shrink-0 text-primary-500 dark:text-primary-400" />
-                      Add ${(150 - totalPrice).toFixed(2)} more for free shipping!
+                      Add ₹{(150 - totalPrice).toFixed(2)} more for free shipping!
                     </p>
                   )}
                   <div className="border-t border-secondary-100 dark:border-secondary-700 pt-4 flex justify-between items-center">
                     <span className="text-lg font-bold text-secondary-900 dark:text-white">Total</span>
-                    <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">${estimatedTotal.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">₹{estimatedTotal.toFixed(2)}</span>
                   </div>
                 </div>
 

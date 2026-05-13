@@ -4,7 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { ordersAPI, paymentAPI } from '../services/api';
-import { CreditCard, Check, Truck, AlertCircle, Lock, DollarSign, ChevronRight, Package, ShieldCheck, X } from 'lucide-react';
+import { CreditCard, Check, Truck, AlertCircle, Lock, IndianRupee, ChevronRight, Package, ShieldCheck, X } from 'lucide-react';
 import { gsap } from 'gsap';
 import { CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { getImageUrl } from '../utils/imageUtils';
@@ -603,7 +603,7 @@ const CheckoutPage = () => {
                             />
                             <div className="ml-3 flex items-center gap-3">
                               <div className="p-2 bg-white rounded-lg shadow-sm">
-                                <DollarSign size={24} className="text-success-600 dark:text-success-400" />
+                                <IndianRupee size={24} className="text-success-600 dark:text-success-400" />
                               </div>
                               <span className="block font-semibold text-secondary-900 dark:text-secondary-100">
                                 Cash on Delivery
@@ -691,7 +691,7 @@ const CheckoutPage = () => {
                       {paymentMethod === 'COD' && (
                         <div className="mb-6 p-6 bg-secondary-50 dark:bg-secondary-700/30 rounded-2xl border border-secondary-200 dark:border-secondary-600 animate-fade-in flex flex-col items-center text-center">
                           <div className="w-16 h-16 bg-white dark:bg-secondary-800 rounded-full flex items-center justify-center mb-4 shadow-sm text-success-600 dark:text-success-400">
-                            <DollarSign size={32} />
+                            <IndianRupee size={32} />
                           </div>
                           <h4 className="text-lg font-bold text-secondary-900 dark:text-white mb-2">Cash on Delivery</h4>
                           <p className="text-secondary-600 dark:text-secondary-400 max-w-md">
@@ -788,7 +788,7 @@ const CheckoutPage = () => {
                             ) : (
                               <div className="flex flex-col gap-2">
                                 <div className="flex items-center gap-2 text-secondary-900 dark:text-white font-semibold text-base mb-1">
-                                  <DollarSign size={20} className="text-success-600 dark:text-success-400" />
+                                  <IndianRupee size={20} className="text-success-600 dark:text-success-400" />
                                   Cash on Delivery
                                 </div>
                                 <p className="text-secondary-600 dark:text-secondary-400">Pay upon delivery</p>
@@ -826,7 +826,7 @@ const CheckoutPage = () => {
                                   </p>
                                 </div>
                                 <div className="text-secondary-900 dark:text-secondary-100 font-bold text-lg">
-                                  ${(product.price * item.quantity).toFixed(2)}
+                                  ₹{(product.price * item.quantity).toFixed(2)}
                                 </div>
                               </div>
                             );
@@ -935,7 +935,7 @@ const CheckoutPage = () => {
                           </p>
                         </div>
                         <div className="text-secondary-900 dark:text-secondary-100 text-sm font-bold">
-                          ${(product.price * item.quantity).toFixed(2)}
+                          ₹{(product.price * item.quantity).toFixed(2)}
                         </div>
                       </div>
                     );
@@ -945,19 +945,19 @@ const CheckoutPage = () => {
                 <div className="space-y-3 pt-6 border-t border-dashed border-secondary-200 dark:border-secondary-600">
                   <div className="flex justify-between text-secondary-600 dark:text-secondary-400">
                     <span>Subtotal</span>
-                    <span className="font-semibold text-secondary-900 dark:text-secondary-100">${totalPrice.toFixed(2)}</span>
+                    <span className="font-semibold text-secondary-900 dark:text-secondary-100">₹{totalPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-secondary-600 dark:text-secondary-400">
                     <span>Shipping</span>
-                    <span className="font-semibold text-secondary-900 dark:text-secondary-100">${shippingCost.toFixed(2)}</span>
+                    <span className="font-semibold text-secondary-900 dark:text-secondary-100">₹{shippingCost.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-secondary-600 dark:text-secondary-400">
                     <span>Tax (8.5%)</span>
-                    <span className="font-semibold text-secondary-900 dark:text-secondary-100">${taxAmount.toFixed(2)}</span>
+                    <span className="font-semibold text-secondary-900 dark:text-secondary-100">₹{taxAmount.toFixed(2)}</span>
                   </div>
                   <div className="border-t border-secondary-200 dark:border-secondary-600 pt-4 mt-2 flex justify-between items-end">
                     <span className="font-bold text-xl text-secondary-900 dark:text-white">Total</span>
-                    <span className="font-bold text-2xl text-primary-600 dark:text-primary-400">${orderTotal.toFixed(2)}</span>
+                    <span className="font-bold text-2xl text-primary-600 dark:text-primary-400">₹{orderTotal.toFixed(2)}</span>
                   </div>
                 </div>
 

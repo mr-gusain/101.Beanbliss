@@ -90,17 +90,17 @@ const ProductCard = ({ product }) => {
               {product.discountPrice ? (
                 <>
                   <span className="text-xs text-secondary-400 dark:text-secondary-500 line-through font-medium mb-0.5">
-                    ${product.price.toFixed(2)}
+                    ₹{product.price.toFixed(2)}
                   </span>
                   <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
-                    ${product.discountPrice.toFixed(2)}
+                    ₹{product.discountPrice.toFixed(2)}
                   </span>
                 </>
               ) : (
                 <>
                   <span className="text-xs text-transparent select-none mb-0.5">.</span>
                   <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
-                    ${product.price ? product.price.toFixed(2) : 'N/A'}
+                    ₹{product.price ? product.price.toFixed(2) : 'N/A'}
                   </span>
                 </>
               )}

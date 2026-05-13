@@ -171,14 +171,14 @@ const ProductDetailPage = () => {
               <div className="flex items-end gap-4 mb-8">
                 {product.discountPrice ? (
                   <>
-                    <span className="text-4xl font-bold text-primary-600 dark:text-primary-400">${product.discountPrice.toFixed(2)}</span>
-                    <span className="text-lg text-secondary-400 dark:text-secondary-500 line-through">${product.price.toFixed(2)}</span>
+                    <span className="text-4xl font-bold text-primary-600 dark:text-primary-400">₹{product.discountPrice.toFixed(2)}</span>
+                    <span className="text-lg text-secondary-400 dark:text-secondary-500 line-through">₹{product.price.toFixed(2)}</span>
                     <span className="text-sm font-bold text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-900/20 px-2 py-1 rounded-full">
                       {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
                     </span>
                   </>
                 ) : (
-                  <span className="text-4xl font-bold text-primary-600 dark:text-primary-400">${product.price.toFixed(2)}</span>
+                  <span className="text-4xl font-bold text-primary-600 dark:text-primary-400">₹{product.price.toFixed(2)}</span>
                 )}
               </div>
 

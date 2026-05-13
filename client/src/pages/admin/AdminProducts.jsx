@@ -167,7 +167,7 @@ const AdminProducts = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-secondary-700 dark:text-secondary-300 mb-2">Price ($)</label>
+                            <label className="block text-sm font-semibold text-secondary-700 dark:text-secondary-300 mb-2">Price (₹)</label>
                             <input
                                 type="number"
                                 value={formData.price}
@@ -322,7 +322,7 @@ const AdminProducts = () => {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="text-sm text-secondary-600 dark:text-secondary-400 capitalize bg-secondary-50 dark:bg-secondary-700/50 px-2 py-1 rounded-md">{product.category}</span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-secondary-900 dark:text-secondary-100">${product.price.toFixed(2)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-secondary-900 dark:text-secondary-100">₹{product.price.toFixed(2)}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`text-sm font-medium ${product.stock <= 5 ? 'text-error-600 dark:text-error-400' : 'text-secondary-600 dark:text-secondary-400'}`}>
                                                     {product.stock}
@@ -367,7 +367,7 @@ const AdminProducts = () => {
                                         <h3 className="text-sm font-bold text-secondary-900 dark:text-secondary-100 truncate">{product.name}</h3>
                                         <span className="text-xs text-secondary-500 dark:text-secondary-400 capitalize">{product.category}</span>
                                         <div className="flex items-center gap-4 mt-2">
-                                            <span className="text-sm font-bold text-secondary-900 dark:text-secondary-100">${product.price.toFixed(2)}</span>
+                                            <span className="text-sm font-bold text-secondary-900 dark:text-secondary-100">₹{product.price.toFixed(2)}</span>
                                             <span className={`text-xs font-medium ${product.stock <= 5 ? 'text-error-600 dark:text-error-400' : 'text-secondary-500 dark:text-secondary-400'}`}>
                                                 Stock: {product.stock}
                                             </span>
