@@ -40,14 +40,7 @@ app = FastAPI(title="BeanBliss Backend API (MySQL)", lifespan=lifespan)
 
 # CORS Configuration
 allowed_origins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://bean-bliss-coffee-restro.vercel.app",
-    "https://bean-bliss-coffee-restro.vercel.app/",
-    "https://beanliss-backend.vercel.app",
-    "https://beanliss-backend.vercel.app/",
-    "https://beanbliss-frontend.vercel.app",
-    "https://beanbliss-frontend.vercel.app/",
+    "*",
 ]
 
 app.add_middleware(
