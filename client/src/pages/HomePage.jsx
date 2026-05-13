@@ -84,7 +84,7 @@ const HomePage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
               <div className="inline-block px-4 py-2 bg-white/50 dark:bg-secondary-800/50 backdrop-blur-sm border border-white/40 dark:border-secondary-700/40 rounded-full text-sm font-semibold text-primary-600 dark:text-primary-400 mb-6 hero-text shadow-sm">
-                Credited By: <span className="text-gradient">Rashmi Prasad</span>
+                Credited By : <span className="text-gradient">Rashmi Prasad</span>
               </div>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-secondary-900 dark:text-white mb-6 hero-text">
                 Future Favorites,<br />
@@ -110,11 +110,11 @@ const HomePage = () => {
             </div>
 
             <div className="order-1 lg:order-2 hero-image relative">
-              <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+              <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 aspect-[4/5] max-h-[600px] mx-auto">
                 <img
                   src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80"
                   alt="Premium Coffee"
-                  className="w-full h-auto object-cover"
+                  className="w-full h-full object-cover"
                 />
               </div>
               {/* Floating elements */ }
