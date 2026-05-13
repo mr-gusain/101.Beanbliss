@@ -167,7 +167,7 @@ const AccountPage = () => {
                     }`}>
                     {order.paymentStatus}
                   </span>
-                  <p className="font-bold text-secondary-900 dark:text-secondary-100 text-lg">${order.total.toFixed(2)}</p>
+                  <p className="font-bold text-secondary-900 dark:text-secondary-100 text-lg">₹{order.total.toFixed(2)}</p>
                   <ChevronRight size={20} className="text-secondary-400 dark:text-secondary-500 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
                 </div>
               </div>
@@ -221,7 +221,7 @@ const AccountPage = () => {
                   </div>
                   <div>
                     <p className="text-xs text-secondary-500 dark:text-secondary-400 font-bold uppercase tracking-wider mb-1">Total Amount</p>
-                    <p className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">${order.total.toFixed(2)}</p>
+                    <p className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">₹{order.total.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-secondary-500 dark:text-secondary-400 font-bold uppercase tracking-wider mb-1">Status</p>
@@ -253,11 +253,11 @@ const AccountPage = () => {
                         <Link to={`/products/${item.product?._id}`} className="font-bold text-secondary-900 dark:text-secondary-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-lg mb-1 block">
                           {item.product?.name || 'Unknown Product'}
                         </Link>
-                        <p className="text-sm text-secondary-500 dark:text-secondary-400">Qty: {item.quantity} &times; ${item.price.toFixed(2)}</p>
+                        <p className="text-sm text-secondary-500 dark:text-secondary-400">Qty: {item.quantity} &times; ₹{item.price.toFixed(2)}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-secondary-900 dark:text-secondary-100 text-lg">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold text-secondary-900 dark:text-secondary-100 text-lg">₹{(item.price * item.quantity).toFixed(2)}</p>
                       <button className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium mt-1">
                         Buy Again
                       </button>

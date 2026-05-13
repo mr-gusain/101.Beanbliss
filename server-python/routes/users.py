@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from models.user import User, UserAddress, UserPaymentMethod, UserNotification
+from models.order import Order
+from models.cart import Cart
 from core.security import get_current_user, get_admin_user
 from core.database import get_db
 
@@ -188,3 +190,27 @@ async def clear_notifications(user: User = Depends(get_current_user), db: AsyncS
     await db.commit()
     await db.refresh(user)
     return []
+
+
+@router.delete("/admin/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def admin_delete_user(
+    user_id: int,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if user_id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    orders_result = await db.execute(select(Order).where(Order.user_id == user_id))
+    for order in orders_result.scalars().all():
+        await db.delete(order)
+    cart_result = await db.execute(select(Cart).where(Cart.user_id == user_id))
+    cart = cart_result.scalars().first()
+    if cart:
+        await db.delete(cart)
+    await db.delete(user)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

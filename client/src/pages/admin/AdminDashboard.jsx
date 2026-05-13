@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usersAPI, ordersAPI, productsAPI } from '../../services/api';
-import { Users, ShoppingBag, Package, DollarSign, TrendingUp } from 'lucide-react';
+import { Users, ShoppingBag, Package, IndianRupee, TrendingUp } from 'lucide-react';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState({
@@ -54,8 +54,8 @@ const AdminDashboard = () => {
     const statCards = [
         {
             label: 'Total Revenue',
-            value: `$${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            icon: DollarSign,
+            value: `₹${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            icon: IndianRupee,
             color: 'green',
             trend: '+12.5%',
             trendLabel: 'from last month'
@@ -163,7 +163,7 @@ const AdminDashboard = () => {
                                         {new Date(order.createdAt).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-secondary-900 dark:text-secondary-100">
-                                        ${order.total.toFixed(2)}
+                                        ₹{order.total.toFixed(2)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${order.paymentStatus === 'Paid'
@@ -206,7 +206,7 @@ const AdminDashboard = () => {
                                 <p className="text-sm text-secondary-600 dark:text-secondary-400">
                                     {order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Guest'}
                                 </p>
-                                <p className="text-sm font-bold text-secondary-900 dark:text-secondary-100">${order.total.toFixed(2)}</p>
+                                <p className="text-sm font-bold text-secondary-900 dark:text-secondary-100">₹{order.total.toFixed(2)}</p>
                             </div>
                         </div>
                     ))}

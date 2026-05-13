@@ -322,7 +322,7 @@ const ProductsPage = () => {
                       <div>
                         <div className="flex justify-between mb-1">
                           <label className="text-xs text-secondary-500 dark:text-secondary-400">Min Price</label>
-                          <span className="text-sm font-medium text-secondary-900 dark:text-secondary-100">${priceRange[0]}</span>
+                          <span className="text-sm font-medium text-secondary-900 dark:text-secondary-100">₹{priceRange[0]}</span>
                         </div>
                         <input
                           type="range"
@@ -337,7 +337,7 @@ const ProductsPage = () => {
                       <div>
                         <div className="flex justify-between mb-1">
                           <label className="text-xs text-secondary-500 dark:text-secondary-400">Max Price</label>
-                          <span className="text-sm font-medium text-secondary-900 dark:text-secondary-100">${priceRange[1]}</span>
+                          <span className="text-sm font-medium text-secondary-900 dark:text-secondary-100">₹{priceRange[1]}</span>
                         </div>
                         <input
                           type="range"
@@ -430,7 +430,7 @@ const ProductsPage = () => {
                     <div>
                       <div className="flex justify-between mb-2">
                         <label className="text-sm text-secondary-500 dark:text-secondary-400">Min Price</label>
-                        <span className="font-medium text-secondary-900 dark:text-secondary-100">${priceRange[0]}</span>
+                        <span className="font-medium text-secondary-900 dark:text-secondary-100">₹{priceRange[0]}</span>
                       </div>
                       <input
                         type="range"
@@ -445,7 +445,7 @@ const ProductsPage = () => {
                     <div>
                       <div className="flex justify-between mb-2">
                         <label className="text-sm text-secondary-500 dark:text-secondary-400">Max Price</label>
-                        <span className="font-medium text-secondary-900 dark:text-secondary-100">${priceRange[1]}</span>
+                        <span className="font-medium text-secondary-900 dark:text-secondary-100">₹{priceRange[1]}</span>
                       </div>
                       <input
                         type="range"

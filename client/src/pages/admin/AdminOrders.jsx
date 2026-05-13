@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ordersAPI } from '../../services/api';
-import { Search, Package } from 'lucide-react';
+import { Search, Package, Trash2 } from 'lucide-react';
 
 const AdminOrders = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [deletingId, setDeletingId] = useState(null);
 
     useEffect(() => {
         fetchOrders();
@@ -19,6 +20,20 @@ const AdminOrders = () => {
             console.error('Error fetching orders:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async (orderId) => {
+        if (!window.confirm('Delete this order permanently? This cannot be undone.')) return;
+        try {
+            setDeletingId(orderId);
+            await ordersAPI.deleteAdmin(orderId);
+            setOrders((prev) => prev.filter((o) => o._id !== orderId));
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            alert(error.message || 'Failed to delete order');
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -75,6 +90,7 @@ const AdminOrders = () => {
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-secondary-500 dark:text-secondary-400 uppercase tracking-wider">Items</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-secondary-500 dark:text-secondary-400 uppercase tracking-wider">Total</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-secondary-500 dark:text-secondary-400 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-right text-xs font-semibold text-secondary-500 dark:text-secondary-400 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-secondary-100 dark:divide-secondary-700">
@@ -100,18 +116,29 @@ const AdminOrders = () => {
                                         {order.items.length} items
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-secondary-900 dark:text-secondary-100">
-                                        ${order.total.toFixed(2)}
+                                        ₹{order.total.toFixed(2)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${getStatusColor(order.paymentStatus)}`}>
                                             {order.paymentStatus}
                                         </span>
                                     </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(order._id)}
+                                            disabled={deletingId === order._id}
+                                            className="inline-flex items-center justify-center p-2 text-error-500 dark:text-error-400 hover:text-error-700 dark:hover:text-error-300 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Delete order"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                             {filteredOrders.length === 0 && (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-secondary-500 dark:text-secondary-400">
+                                    <td colSpan="7" className="px-6 py-12 text-center text-secondary-500 dark:text-secondary-400">
                                         No orders found
                                     </td>
                                 </tr>
@@ -125,14 +152,25 @@ const AdminOrders = () => {
             <div className="md:hidden space-y-3">
                 {filteredOrders.map((order) => (
                     <div key={order._id} className="bg-white dark:bg-secondary-800 rounded-2xl shadow-sm border border-secondary-100 dark:border-secondary-700 p-4">
-                        <div className="flex justify-between items-start mb-3">
-                            <div>
+                        <div className="flex justify-between items-start mb-3 gap-2">
+                            <div className="min-w-0">
                                 <p className="text-sm font-bold text-secondary-900 dark:text-secondary-100">#{order._id.slice(-6).toUpperCase()}</p>
                                 <p className="text-xs text-secondary-500 dark:text-secondary-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString()}</p>
                             </div>
-                            <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${getStatusColor(order.paymentStatus)}`}>
-                                {order.paymentStatus}
-                            </span>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${getStatusColor(order.paymentStatus)}`}>
+                                    {order.paymentStatus}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDelete(order._id)}
+                                    disabled={deletingId === order._id}
+                                    className="p-2 text-error-500 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-lg transition-colors disabled:opacity-50"
+                                    title="Delete order"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
                         </div>
                         <div className="flex justify-between items-center">
                             <div className="min-w-0">
@@ -141,7 +179,7 @@ const AdminOrders = () => {
                                 </p>
                                 <p className="text-xs text-secondary-400 dark:text-secondary-500">{order.items.length} items</p>
                             </div>
-                            <p className="text-sm font-bold text-secondary-900 dark:text-secondary-100 shrink-0 ml-4">${order.total.toFixed(2)}</p>
+                            <p className="text-sm font-bold text-secondary-900 dark:text-secondary-100 shrink-0 ml-4">₹{order.total.toFixed(2)}</p>
                         </div>
                     </div>
                 ))}

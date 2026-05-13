@@ -432,7 +432,7 @@ const ThankYouPage = () => {
                   className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-primary-600 to-accent-600 dark:from-primary-400 dark:to-accent-400 bg-clip-text text-transparent"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  ${order.total?.toFixed(2)}
+                  ₹{order.total?.toFixed(2)}
                 </p>
                 <div className="mt-5">
                   <button
