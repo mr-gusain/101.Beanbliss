@@ -40,12 +40,16 @@ app = FastAPI(title="BeanBliss Backend API (MySQL)", lifespan=lifespan)
 
 # CORS Configuration
 allowed_origins = [
-    "*",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://beanbliss-frontend.vercel.app",
+    "https://beanbliss-psi.vercel.app",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,7 +70,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     traceback.print_exc()
     origin = request.headers.get("origin")
     headers = {}
-    if origin in allowed_origins:
+    if origin: # Safely reflect origin for exceptions to avoid CORS masking the actual error
         headers = {
             "Access-Control-Allow-Origin": origin,
             "Access-Control-Allow-Credentials": "true",
