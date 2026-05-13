@@ -4,7 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { ordersAPI, paymentAPI } from '../services/api';
-import { CreditCard, Check, Truck, AlertCircle, Lock, IndianRupee, ChevronRight, Package, ShieldCheck, X } from 'lucide-react';
+import { CreditCard, Check, User, AlertCircle, Lock, IndianRupee, ChevronRight, Package, ShieldCheck, X } from 'lucide-react';
 import { gsap } from 'gsap';
 import { CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { getImageUrl } from '../utils/imageUtils';
@@ -14,7 +14,7 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isDark } = useTheme();
-  const [currentStep, setCurrentStep] = useState('shipping');
+  const [currentStep, setCurrentStep] = useState('details');
   const [shippingInfo, setShippingInfo] = useState({
     firstName: '',
     lastName: '',
@@ -33,7 +33,6 @@ const CheckoutPage = () => {
     expiryDate: '',
     cvv: '',
   });
-  const [shippingMethod, setShippingMethod] = useState('standard');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [stripePaymentMethod, setStripePaymentMethod] = useState(null);
   const [cardComplete, setCardComplete] = useState({
@@ -65,8 +64,7 @@ const CheckoutPage = () => {
 
 
   const isFreeShipping = totalPrice >= 100;
-  const standardCost = isFreeShipping ? 0 : 10.00;
-  const shippingCost = shippingMethod === 'express' ? 35.00 : shippingMethod === 'priority' ? 20.00 : standardCost;
+  const shippingCost = isFreeShipping ? 0 : 10.00;
   const taxAmount = totalPrice * 0.085;
   const orderTotal = totalPrice + shippingCost + taxAmount;
 
@@ -112,7 +110,7 @@ const CheckoutPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (currentStep === 'shipping') {
+    if (currentStep === 'details') {
       setCurrentStep('payment');
       window.scrollTo(0, 0);
     } else if (currentStep === 'payment') {
@@ -165,7 +163,7 @@ const CheckoutPage = () => {
           setProcessing(true);
           if (paymentMethod === 'Card') {
 
-            const { clientSecret } = await paymentAPI.createPaymentIntent(shippingMethod);
+            const { clientSecret } = await paymentAPI.createPaymentIntent('standard');
 
 
             const { error: confirmError } = await stripe.confirmCardPayment(clientSecret, {
@@ -180,7 +178,7 @@ const CheckoutPage = () => {
 
           const orderData = {
             shippingInfo,
-            shippingMethod,
+            shippingMethod: 'standard',
             paymentMethod
           };
 
@@ -215,7 +213,7 @@ const CheckoutPage = () => {
 
   const handleBack = () => {
     if (currentStep === 'payment') {
-      setCurrentStep('shipping');
+      setCurrentStep('details');
     } else if (currentStep === 'review') {
       setCurrentStep('payment');
     }
@@ -224,7 +222,7 @@ const CheckoutPage = () => {
 
 
   const isStepComplete = () => {
-    if (currentStep === 'shipping') {
+    if (currentStep === 'details') {
       return (
         shippingInfo.firstName &&
         shippingInfo.lastName &&
@@ -253,7 +251,7 @@ const CheckoutPage = () => {
   };
 
   const steps = [
-    { id: 'shipping', label: 'Shipping', icon: Truck },
+    { id: 'details', label: 'Personal details', icon: User },
     { id: 'payment', label: 'Payment', icon: CreditCard },
     { id: 'review', label: 'Review', icon: Check },
   ];
@@ -276,15 +274,15 @@ const CheckoutPage = () => {
               <div
                 className="absolute top-1/2 left-0 h-1 bg-primary-600 -translate-y-1/2 z-0 transition-all duration-500 ease-in-out"
                 style={{
-                  width: currentStep === 'shipping' ? '0%' : currentStep === 'payment' ? '50%' : '100%'
+                  width: currentStep === 'details' ? '0%' : currentStep === 'payment' ? '50%' : '100%'
                 }}
               ></div>
 
               {steps.map((step, index) => {
                 const isActive = currentStep === step.id;
                 const isCompleted =
-                  (currentStep === 'payment' && step.id === 'shipping') ||
-                  (currentStep === 'review' && (step.id === 'shipping' || step.id === 'payment'));
+                  (currentStep === 'payment' && step.id === 'details') ||
+                  (currentStep === 'review' && (step.id === 'details' || step.id === 'payment'));
 
                 return (
                   <div key={step.id} className="relative z-10 flex flex-col items-center">
@@ -311,12 +309,12 @@ const CheckoutPage = () => {
             <div className="lg:col-span-2 space-y-8">
               <div ref={formRef} className="bg-white dark:bg-secondary-800 rounded-2xl shadow-soft border border-secondary-100 dark:border-secondary-700 p-6 md:p-8">
                 <form onSubmit={handleSubmit}>
-                  {/* Shipping Information */}
-                  {currentStep === 'shipping' && (
+                  {/* Personal details */}
+                  {currentStep === 'details' && (
                     <>
                       <h2 className="text-2xl font-bold text-secondary-900 dark:text-white mb-8 flex items-center gap-3 border-b border-secondary-100 dark:border-secondary-700 pb-4">
-                        <Truck className="text-primary-600 dark:text-primary-400" size={24} />
-                        Shipping Information
+                        <User className="text-primary-600 dark:text-primary-400" size={24} />
+                        Personal details
                       </h2>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
@@ -452,7 +450,7 @@ const CheckoutPage = () => {
                         </div>
                       </div>
 
-                      <div className="mb-8">
+                      <div>
                         <label htmlFor="country" className="block text-sm font-semibold text-secondary-700 dark:text-secondary-300 mb-2">
                           Country *
                         </label>
@@ -475,83 +473,6 @@ const CheckoutPage = () => {
                             <ChevronRight className="rotate-90" size={20} />
                           </div>
                         </div>
-                      </div>
-
-                      <h3 className="text-xl font-bold text-secondary-900 dark:text-white mb-6">
-                        Shipping Method
-                      </h3>
-
-                      <div className="space-y-4 mb-6">
-                        <label className={`flex items-start p-4 border rounded-xl cursor-pointer transition-all ${shippingMethod === 'standard'
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-500'
-                          : 'border-secondary-200 dark:border-secondary-600 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-secondary-50 dark:hover:bg-secondary-700/50'
-                          }`}>
-                          <input
-                            type="radio"
-                            name="shippingMethod"
-                            value="standard"
-                            checked={shippingMethod === 'standard'}
-                            onChange={() => setShippingMethod('standard')}
-                            className="mt-1 text-primary-600 focus:ring-primary-500 w-5 h-5"
-                          />
-                          <div className="ml-4 flex-grow">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="block font-bold text-secondary-900 dark:text-secondary-100">Standard Shipping</span>
-                              <span className="block text-primary-700 dark:text-primary-400 font-bold">
-                                {isFreeShipping ? <span className="text-success-600 dark:text-success-400">Free</span> : '$10.00'}
-                              </span>
-                            </div>
-                            <span className="block text-sm text-secondary-600 dark:text-secondary-400">
-                              Delivery in 5-7 business days
-                            </span>
-                          </div>
-                        </label>
-
-                        <label className={`flex items-start p-4 border rounded-xl cursor-pointer transition-all ${shippingMethod === 'priority'
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-500'
-                          : 'border-secondary-200 dark:border-secondary-600 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-secondary-50 dark:hover:bg-secondary-700/50'
-                          }`}>
-                          <input
-                            type="radio"
-                            name="shippingMethod"
-                            value="priority"
-                            checked={shippingMethod === 'priority'}
-                            onChange={() => setShippingMethod('priority')}
-                            className="mt-1 text-primary-600 focus:ring-primary-500 w-5 h-5"
-                          />
-                          <div className="ml-4 flex-grow">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="block font-bold text-secondary-900 dark:text-secondary-100">Priority Shipping</span>
-                              <span className="block text-primary-700 dark:text-primary-400 font-bold">$20.00</span>
-                            </div>
-                            <span className="block text-sm text-secondary-600 dark:text-secondary-400">
-                              Delivery in 2-3 business days
-                            </span>
-                          </div>
-                        </label>
-
-                        <label className={`flex items-start p-4 border rounded-xl cursor-pointer transition-all ${shippingMethod === 'express'
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-500'
-                          : 'border-secondary-200 dark:border-secondary-600 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-secondary-50 dark:hover:bg-secondary-700/50'
-                          }`}>
-                          <input
-                            type="radio"
-                            name="shippingMethod"
-                            value="express"
-                            checked={shippingMethod === 'express'}
-                            onChange={() => setShippingMethod('express')}
-                            className="mt-1 text-primary-600 focus:ring-primary-500 w-5 h-5"
-                          />
-                          <div className="ml-4 flex-grow">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="block font-bold text-secondary-900 dark:text-secondary-100">Express Shipping</span>
-                              <span className="block text-primary-700 dark:text-primary-400 font-bold">$35.00</span>
-                            </div>
-                            <span className="block text-sm text-secondary-600 dark:text-secondary-400">
-                              Delivery in 1 business day
-                            </span>
-                          </div>
-                        </label>
                       </div>
                     </>
                   )}
@@ -709,7 +630,7 @@ const CheckoutPage = () => {
                             className="text-primary-600 focus:ring-primary-500 rounded border-gray-300 w-4 h-4"
                           />
                           <span className="ml-3 text-secondary-700 dark:text-secondary-300 font-medium">
-                            Billing address is same as shipping address
+                            Billing address is same as delivery address
                           </span>
                         </label>
                       </div>
@@ -728,11 +649,11 @@ const CheckoutPage = () => {
                         <div className="bg-secondary-50 dark:bg-secondary-700/30 p-6 rounded-2xl border border-secondary-100 dark:border-secondary-600">
                           <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-secondary-900 dark:text-secondary-100 flex items-center gap-2">
-                              <Truck size={18} className="text-primary-600 dark:text-primary-400" /> Shipping
+                              <User size={18} className="text-primary-600 dark:text-primary-400" /> Personal details
                             </h3>
                             <button
                               type="button"
-                              onClick={() => setCurrentStep('shipping')}
+                              onClick={() => setCurrentStep('details')}
                               className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline"
                             >
                               Edit
@@ -748,9 +669,6 @@ const CheckoutPage = () => {
                             <div className="mt-3 pt-3 border-t border-secondary-200 dark:border-secondary-600">
                               <p className="font-medium">{shippingInfo.email}</p>
                               <p>{shippingInfo.phone}</p>
-                            </div>
-                            <div className="mt-2 text-primary-700 dark:text-primary-400 font-medium bg-primary-50 dark:bg-primary-900/20 inline-block px-2 py-1 rounded">
-                              {shippingMethod === 'express' ? 'Express (1 day)' : shippingMethod === 'priority' ? 'Priority (2-3 days)' : 'Standard (5-7 days)'}
                             </div>
                           </div>
                         </div>
@@ -855,7 +773,7 @@ const CheckoutPage = () => {
 
                   <div className="flex flex-col-reverse sm:flex-row justify-between items-center pt-6 border-t border-secondary-100 dark:border-secondary-700 gap-4 sm:gap-0">
                     <div className="flex gap-3 w-full sm:w-auto">
-                      {currentStep !== 'shipping' && (
+                      {currentStep !== 'details' && (
                         <button
                           type="button"
                           onClick={handleBack}
@@ -889,7 +807,7 @@ const CheckoutPage = () => {
                           Processing...
                         </>
                       ) : (
-                        currentStep === 'shipping'
+                        currentStep === 'details'
                           ? <>Continue to Payment <ChevronRight size={18} /></>
                           : currentStep === 'payment'
                             ? <>Review Order <ChevronRight size={18} /></>
@@ -948,7 +866,7 @@ const CheckoutPage = () => {
                     <span className="font-semibold text-secondary-900 dark:text-secondary-100">₹{totalPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-secondary-600 dark:text-secondary-400">
-                    <span>Shipping</span>
+                    <span>Delivery</span>
                     <span className="font-semibold text-secondary-900 dark:text-secondary-100">₹{shippingCost.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-secondary-600 dark:text-secondary-400">
