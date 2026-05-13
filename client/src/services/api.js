@@ -29,7 +29,18 @@ const apiCall = async (endpoint, options = {}) => {
     throw new Error(error.message || 'Request failed');
   }
 
-  return response.json();
+  if (response.status === 204) {
+    return null;
+  }
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 };
 
 export const productsAPI = {
@@ -107,12 +118,20 @@ export const ordersAPI = {
   getAll: () => apiCall('/orders'),
   getAllAdmin: () => apiCall('/orders/admin/all'),
   getById: (id) => apiCall(`/orders/${id}`),
+  deleteAdmin: (id) =>
+    apiCall(`/orders/admin/${id}`, {
+      method: 'DELETE',
+    }),
 };
 
 
 export const usersAPI = {
   getProfile: () => apiCall('/users/profile'),
   getAll: () => apiCall('/users'),
+  adminDelete: (id) =>
+    apiCall(`/users/admin/${id}`, {
+      method: 'DELETE',
+    }),
   updateProfile: (data) =>
     apiCall('/users/profile', {
       method: 'PUT',

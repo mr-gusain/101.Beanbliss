@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Response, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -97,6 +97,21 @@ async def get_all_orders(admin: User = Depends(get_admin_user), db: AsyncSession
     result = await db.execute(select(Order).order_by(Order.createdAt.desc()))
     orders = result.scalars().all()
     return [_serialize_order(o) for o in orders]
+
+
+@router.delete("/admin/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def admin_delete_order(
+    order_id: int,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Order).where(Order.id == order_id))
+    order = result.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    await db.delete(order)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.post("")
 async def create_order(
